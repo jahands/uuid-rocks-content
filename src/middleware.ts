@@ -51,6 +51,7 @@ export function useAxiomLogger<T extends App>(environment: Environment) {
 					url: c.req.url,
 					method: c.req.method,
 					path: c.req.path,
+					host: new URL(c.req.url).host,
 					headers: JSON.stringify(Array.from(c.req.raw.headers)),
 					ip: c.req.header('cf-connecting-ip') || c.req.header('x-real-ip') || c.req.header('x-forwarded-for'),
 				},
