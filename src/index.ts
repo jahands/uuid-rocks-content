@@ -74,26 +74,28 @@ const app = new Hono<App>()
 			})
 		}
 
+		c.set('r2Hit', true)
+
 		const contentType = r2Res.httpMetadata?.contentType || mime.getType(fileExtension) || 'application/octet-stream'
 		if (r2Res.size > 0) {
 			c.res.headers.set('Content-Length', r2Res.size.toString())
 		}
 
-		// Cache in KV
 		const body = await r2Res.arrayBuffer()
-		c.executionCtx.waitUntil(
-			c.env.KV.put(kvPath, body, {
-				expirationTtl: 2592000, // 30 days
-				metadata: {
-					headers: {
-						'content-type': contentType,
-						'content-length': r2Res.size.toString(),
+		// Cache in KV if it's within 25MiB
+		if (r2Res.size <= 25 * 1024 * 1024) {
+			c.executionCtx.waitUntil(
+				c.env.KV.put(kvPath, body, {
+					expirationTtl: 2592000, // 30 days
+					metadata: {
+						headers: {
+							'content-type': contentType,
+							'content-length': r2Res.size.toString(),
+						},
 					},
-				},
-			})
-		)
-
-		c.set('r2Hit', true)
+				})
+			)
+		}
 
 		return c.body(body, 200, {
 			'Content-Type': contentType,
