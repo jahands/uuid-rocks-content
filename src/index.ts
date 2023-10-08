@@ -2,8 +2,13 @@ import { Hono } from 'hono'
 import mime from 'mime'
 import pRetry from 'p-retry'
 import { App } from './types'
+import { useAxiomLogger, useCFTraceMiddleware } from './middleware'
+
+declare const ENVIRONMENT: 'production' | undefined
 
 const app = new Hono<App>()
+	.use('*', useCFTraceMiddleware<App>(ENVIRONMENT))
+	.use('*', useAxiomLogger<App>(ENVIRONMENT))
 	.get('*', async (c) => {
 		const kvPath = `uuid-rocks-content/IMAGES${c.req.path}`
 		const r2Path = `IMAGES${c.req.path}`

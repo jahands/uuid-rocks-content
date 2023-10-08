@@ -5,11 +5,11 @@ usage_model = "unbound"
 wrangler_dev = false
 routes = ["i.uuid.rocks/*"]
 
-# Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
-# Note: Use secrets to store sensitive data.
-# Docs: https://developers.cloudflare.com/workers/platform/environment-variables
-# [vars]
-# MY_VARIABLE = "production_value"
+[vars]
+AXIOM_DATASET = "workers"
+
+[define]
+ENVIRONMENT = '"production"'
 
 [[kv_namespaces]]
 binding = "KV"
