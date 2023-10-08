@@ -89,6 +89,8 @@ export async function getFromStorage(c: Context<App, '*'>): Promise<Response> {
 				},
 			})
 		)
+	} else {
+		c.get('logger').info('Not caching in KV because size is too big')
 	}
 
 	return c.body(body, 200, {
