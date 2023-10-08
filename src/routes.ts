@@ -29,12 +29,13 @@ export async function getFromStorage(c: Context<App, '*'>): Promise<Response> {
 			},
 		}
 	)
+
 	if (kvRes.value) {
 		c.set('kvHit', true)
 		const meta = kvRes.metadata as any
 		const contentType = (meta?.headers['content-type'] as string) || mime.getType(fileExtension) || 'application/octet-stream'
 		if (meta?.headers['content-length']) {
-			c.res.headers.set('Content-Length', meta.headers['content-length'])
+			c.header('Content-Length', meta.headers['content-length'])
 		}
 		console.log('KV cache hit')
 		return c.body(kvRes.value, 200, {
@@ -61,18 +62,17 @@ export async function getFromStorage(c: Context<App, '*'>): Promise<Response> {
 			},
 		}
 	)
+
 	if (!r2Res) {
-		return c.body('not found', 404, {
-			'Content-Type': 'text/plain',
-			'Cache-Control': 'public, max-age=3600', // 1 hour
-		})
+		c.header('Cache-Control', 'public, max-age=3600')
+		return c.notFound()
 	}
 
 	c.set('r2Hit', true)
 
 	const contentType = r2Res.httpMetadata?.contentType || mime.getType(fileExtension) || 'application/octet-stream'
 	if (r2Res.size > 0) {
-		c.res.headers.set('Content-Length', r2Res.size.toString())
+		c.header('Content-Length', r2Res.size.toString())
 	}
 
 	const body = await r2Res.arrayBuffer()

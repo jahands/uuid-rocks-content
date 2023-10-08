@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono,  } from 'hono'
 import { App } from './types'
 import { useAxiomLogger, useCFTraceMiddleware } from './middleware'
 import { getFromStorage } from './routes'
@@ -8,7 +8,15 @@ declare const ENVIRONMENT: 'production' | undefined
 const app = new Hono<App>()
 	.use('*', useCFTraceMiddleware<App>(ENVIRONMENT))
 	.use('*', useAxiomLogger<App>(ENVIRONMENT))
-	.get('*', getFromStorage)
+	.get('*', async (c) => {
+		const host = new URL(c.req.url).host
+		switch (host) {
+			case 'i.uuid.rocks':
+				return getFromStorage(c)
+			default:
+				return c.notFound()
+		}
+	})
 	.onError((err, c) => {
 		c.get('logger').error(err)
 		return c.text('internal server error', 500, {
