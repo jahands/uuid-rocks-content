@@ -17,7 +17,7 @@ const app = new Hono<App>()
 		// Check KV cache
 		const kvRes = await pRetry(
 			async () => {
-				const res = await c.env.KV.getWithMetadata(kvPath, { type: 'stream' })
+				const res = await c.env.KV.getWithMetadata(kvPath, { type: 'stream', cacheTtl: 604800 }) // 7 days
 				return res
 			},
 			{
