@@ -23,6 +23,13 @@ const app = new Hono<App>()
 			{
 				retries: 3,
 				randomize: true,
+				onFailedAttempt: (err) => {
+					c.get('logger').error(`KV read failed: ${err.message}`, {
+						attemptNumber: err.attemptNumber,
+						retriesLeft: err.retriesLeft,
+						error: err,
+					})
+				},
 			}
 		)
 		if (kvRes.value) {
@@ -47,6 +54,13 @@ const app = new Hono<App>()
 			{
 				retries: 3,
 				randomize: true,
+				onFailedAttempt: (err) => {
+					c.get('logger').error(`R2 read failed: ${err.message}`, {
+						attemptNumber: err.attemptNumber,
+						retriesLeft: err.retriesLeft,
+						error: err,
+					})
+				},
 			}
 		)
 		if (!r2Res) {
