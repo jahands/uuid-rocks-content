@@ -1,6 +1,9 @@
 name = "uuid-rocks-content"
 main = "src/index.ts"
 compatibility_date = "2023-10-02"
+usage_model = "unbound"
+wrangler_dev = false
+routes = ["i.uuid.rocks/*"]
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
@@ -8,17 +11,13 @@ compatibility_date = "2023-10-02"
 # [vars]
 # MY_VARIABLE = "production_value"
 
-# Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
-# Docs: https://developers.cloudflare.com/workers/runtime-apis/kv
-# [[kv_namespaces]]
-# binding = "MY_KV_NAMESPACE"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+[[kv_namespaces]]
+binding = "KV"
+id = "9c174a80519a410e94b9b3296154b3d2" # cache
 
-# Bind an R2 Bucket. Use R2 to store arbitrarily large blobs of data, such as files.
-# Docs: https://developers.cloudflare.com/r2/api/workers/workers-api-usage/
-# [[r2_buckets]]
-# binding = "MY_BUCKET"
-# bucket_name = "my-bucket"
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "uuid-rocks-content"
 
 # Bind a Queue producer. Use this binding to schedule an arbitrary task that may be processed later by a Queue consumer.
 # Docs: https://developers.cloudflare.com/queues/get-started

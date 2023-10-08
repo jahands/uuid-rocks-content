@@ -1,32 +1,87 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Hono } from 'hono'
+import mime from 'mime'
+import pRetry from 'p-retry'
+import { App } from './types'
 
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
-}
+const app = new Hono<App>()
+	.get('*', async (c) => {
+		const kvPath = `uuid-rocks-content/IMAGES${c.req.path}`
+		const r2Path = `IMAGES${c.req.path}`
+		const fileExtension = c.req.path.split('.').pop() || ''
 
-export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
-};
+		// Check KV cache
+		const kvRes = await pRetry(
+			async () => {
+				const res = await c.env.KV.getWithMetadata(kvPath, { type: 'stream' })
+				return res
+			},
+			{
+				retries: 3,
+				randomize: true,
+			}
+		)
+		if (kvRes.value) {
+			const meta = kvRes.metadata as any
+			const contentType = (meta?.headers['content-type'] as string) || mime.getType(fileExtension) || 'application/octet-stream'
+			if (meta?.headers['content-length']) {
+				c.res.headers.set('Content-Length', meta.headers['content-length'])
+			}
+			console.log('KV cache hit')
+			return c.body(kvRes.value, 200, {
+				'Content-Type': contentType,
+				'Cache-Control': 'public, max-age=2592000, immutable', // 30 days
+			})
+		}
+
+		// Fall back to R2
+		const r2Res = await pRetry(
+			async () => {
+				const res = await c.env.R2.get(r2Path)
+				return res
+			},
+			{
+				retries: 3,
+				randomize: true,
+			}
+		)
+		if (!r2Res) {
+			return c.body('not found', 404, {
+				'Content-Type': 'text/plain',
+				'Cache-Control': 'public, max-age=3600', // 1 hour
+			})
+		}
+
+		const contentType = r2Res.httpMetadata?.contentType || mime.getType(fileExtension) || 'application/octet-stream'
+		if (r2Res.size > 0) {
+			c.res.headers.set('Content-Length', r2Res.size.toString())
+		}
+
+		// Cache in KV
+		const body = await r2Res.arrayBuffer()
+		c.executionCtx.waitUntil(
+			c.env.KV.put(kvPath, body, {
+				expirationTtl: 2592000, // 30 days
+				metadata: {
+					headers: {
+						'content-type': contentType,
+						'content-length': r2Res.size.toString(),
+					},
+				},
+			})
+		)
+
+		console.log('R2 hit')
+
+		return c.body(body, 200, {
+			'Content-Type': contentType,
+			'Cache-Control': 'public, max-age=2592000, immutable', // 30 days
+		})
+	})
+	.onError((err, c) => {
+		console.error(err)
+		return c.text('internal server error', 500, {
+			'Content-Type': 'text/plain',
+		})
+	})
+
+export default app
