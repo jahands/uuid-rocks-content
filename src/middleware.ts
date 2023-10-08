@@ -59,7 +59,7 @@ export function useAxiomLogger<T extends App>(environment: Environment) {
 					status: c.res.status,
 				},
 				duration,
-				msc: { r2Hit: c.get('r2Hit'), kvHit: c.get('kvHit') },
+				msc: { r2Hit: c.get('r2Hit'), kvHit: c.get('kvHit'), cacheHit: c.get('cacheHit') },
 			})
 			c.executionCtx.waitUntil(logger.flush())
 		}

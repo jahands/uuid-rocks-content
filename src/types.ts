@@ -17,7 +17,8 @@ export type Variables = {
 	logger: AxiomLogger
 	// debug stuff
 	r2Hit: boolean
-	kvHit: boolean
+  kvHit: boolean
+  cacheHit: boolean
 }
 
 /** Top-level Hono app */
