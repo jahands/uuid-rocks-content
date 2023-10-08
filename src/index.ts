@@ -83,7 +83,7 @@ const app = new Hono<App>()
 		})
 	})
 	.onError((err, c) => {
-		console.error(err)
+		c.get('logger').error(err)
 		return c.text('internal server error', 500, {
 			'Content-Type': 'text/plain',
 		})
