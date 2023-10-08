@@ -12,9 +12,12 @@ export type Bindings = {
 
 /** Global Hono variables */
 export type Variables = {
-  cfTrace: CFTrace
-  invocationId: string
-  logger: AxiomLogger
+	cfTrace: CFTrace
+	invocationId: string
+	logger: AxiomLogger
+	// debug stuff
+	r2Hit: boolean
+	kvHit: boolean
 }
 
 /** Top-level Hono app */

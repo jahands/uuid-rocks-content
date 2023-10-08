@@ -14,6 +14,9 @@ const app = new Hono<App>()
 		const r2Path = `IMAGES${c.req.path}`
 		const fileExtension = c.req.path.split('.').pop() || ''
 
+		c.set('kvHit', false)
+		c.set('r2Hit', false)
+
 		// Check KV cache
 		const kvRes = await pRetry(
 			async () => {
@@ -33,6 +36,7 @@ const app = new Hono<App>()
 			}
 		)
 		if (kvRes.value) {
+			c.set('kvHit', true)
 			const meta = kvRes.metadata as any
 			const contentType = (meta?.headers['content-type'] as string) || mime.getType(fileExtension) || 'application/octet-stream'
 			if (meta?.headers['content-length']) {
@@ -41,7 +45,7 @@ const app = new Hono<App>()
 			console.log('KV cache hit')
 			return c.body(kvRes.value, 200, {
 				'Content-Type': contentType,
-				'Cache-Control': 'public, max-age=2592000, immutable', // 30 days
+				'Cache-Control': 'public, max-age=3600, immutable', // 1 hour
 			})
 		}
 
@@ -89,11 +93,11 @@ const app = new Hono<App>()
 			})
 		)
 
-		console.log('R2 hit')
+		c.set('r2Hit', true)
 
 		return c.body(body, 200, {
 			'Content-Type': contentType,
-			'Cache-Control': 'public, max-age=2592000, immutable', // 30 days
+			'Cache-Control': 'public, max-age=3600, immutable', // 1 hour
 		})
 	})
 	.onError((err, c) => {

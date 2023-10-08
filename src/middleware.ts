@@ -55,6 +55,7 @@ export function useAxiomLogger<T extends App>(environment: Environment) {
 					ip: c.req.header('cf-connecting-ip') || c.req.header('x-real-ip') || c.req.header('x-forwarded-for'),
 				},
 				duration,
+				msc: { r2Hit: c.get('r2Hit'), kvHit: c.get('kvHit') },
 			})
 			c.executionCtx.waitUntil(logger.flush())
 		}
