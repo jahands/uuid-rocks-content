@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono'
 import { AxiomLogger } from './axiom'
-import { App, Environment } from './types'
+import { App, Environment, Host, Hosts } from './types'
 import { getCFTrace } from './cftrace'
 
 /** Adds cftrace in environment 'production' and sets invocationId */
@@ -64,4 +64,13 @@ export function useAxiomLogger<T extends App>(environment: Environment) {
 			c.executionCtx.waitUntil(logger.flush())
 		}
 	}
+}
+
+export async function useHostnameMiddleware(c: Context<App, '*'>, next: Next): Promise<void | Response> {
+	const host = new URL(c.req.url).host
+	if (!Hosts.includes(host as Host)) {
+		return c.notFound()
+	}
+	c.set('host', host as Host)
+	await next()
 }

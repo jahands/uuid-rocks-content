@@ -11,14 +11,19 @@ export type Bindings = {
 }
 
 /** Global Hono variables */
+export const Hosts = ['i.uuid.rocks', 'dl.uuid.rocks'] as const
+export type Host = typeof Hosts[number]
+
 export type Variables = {
 	cfTrace: CFTrace
 	invocationId: string
 	logger: AxiomLogger
+	// Some stuff differs by host - this gets set in middleware
+	host: Host
 	// debug stuff
 	r2Hit: boolean
-  kvHit: boolean
-  cacheHit: boolean
+	kvHit: boolean
+	cacheHit: boolean
 }
 
 /** Top-level Hono app */
