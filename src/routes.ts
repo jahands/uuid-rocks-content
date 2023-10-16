@@ -113,3 +113,63 @@ export async function getFromStorage(c: Context<App, '*'>): Promise<Response> {
 
 	return response
 }
+
+export async function getFromStorageNoCache(c: Context<App, '*'>): Promise<Response> {
+	const r2Path = `DL${c.req.path}`
+	const fileExtension = c.req.path.split('.').pop() || ''
+	let response: Response | undefined
+	const cache = caches.default
+
+	c.set('r2Hit', false)
+	c.set('cacheHit', false)
+
+	const cachedResponse = await cache.match(c.req.raw)
+	if (cachedResponse) {
+		c.set('cacheHit', true)
+		return cachedResponse
+	}
+
+	// Fall back to R2
+	const r2Res = await pRetry(
+		async () => {
+			const res = await c.env.R2.get(r2Path)
+			return res
+		},
+		{
+			retries: 3,
+			randomize: true,
+			onFailedAttempt: (err) => {
+				c.get('logger').error(`R2 read failed: ${err.message}`, {
+					attemptNumber: err.attemptNumber,
+					retriesLeft: err.retriesLeft,
+					error: err,
+				})
+			},
+		}
+	)
+
+	if (r2Res) {
+		c.set('r2Hit', true)
+
+		const contentType = r2Res.httpMetadata?.contentType || mime.getType(fileExtension) || 'application/octet-stream'
+		if (r2Res.size > 0) {
+			c.header('Content-Length', r2Res.size.toString())
+		}
+
+		const body = await r2Res.arrayBuffer()
+
+		response = c.body(body, 200, {
+			'Content-Type': contentType,
+			'Cache-Control': 'public, max-age=3600, immutable', // 1 hour
+		})
+	}
+
+	if (!response) {
+		// Only cache 404's - files are probably too big for cache
+		c.header('Cache-Control', 'public, max-age=60, s-max-age=600')
+		response = await c.notFound()
+		c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()))
+	}
+
+	return response
+}

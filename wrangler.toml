@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2023-10-02"
 usage_model = "unbound"
 workers_dev = false
-routes = ["i.uuid.rocks/*"]
+routes = ["i.uuid.rocks/*", "dl.uuid.rocks/*"]
 
 [vars]
 AXIOM_DATASET = "workers"

@@ -1,7 +1,7 @@
-import { Hono,  } from 'hono'
+import { Hono } from 'hono'
 import { App } from './types'
 import { useAxiomLogger, useCFTraceMiddleware } from './middleware'
-import { getFromStorage } from './routes'
+import { getFromStorage, getFromStorageNoCache } from './routes'
 
 declare const ENVIRONMENT: 'production' | undefined
 
@@ -13,6 +13,8 @@ const app = new Hono<App>()
 		switch (host) {
 			case 'i.uuid.rocks':
 				return getFromStorage(c)
+			case 'dl.uuid.rocks':
+				return getFromStorageNoCache(c)
 			default:
 				return c.notFound()
 		}
