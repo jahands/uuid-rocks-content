@@ -116,7 +116,7 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 
 	if (!response) {
 		// Always cache 404s
-		c.header('Cache-Control', 'public, max-age=60, s-max-age=600')
+		c.header('Cache-Control', 'public, max-age=60, s-max-age=60')
 		response = await c.notFound()
 		c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()))
 	} else if (useCacheAPI) {
