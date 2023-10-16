@@ -53,7 +53,7 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 
 		response = c.body(kvRes.value, 200, {
 			'Content-Type': contentType,
-			'Cache-Control': 'public, max-age=3600', // 1 hour
+			'Cache-Control': 'public, max-age=3600, s-max-age=3600', // 1 hour
 		})
 	} else {
 		// Fall back to R2
