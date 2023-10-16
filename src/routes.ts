@@ -87,11 +87,12 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 				}
 			}
 
-			const body = await r2Res.arrayBuffer()
 			// Cache in KV if it's within 25MiB
+			let arrayBuffer: ArrayBuffer | undefined
 			if (r2Res.size <= 25 * 1024 * 1024) {
+				arrayBuffer = await r2Res.arrayBuffer()
 				c.executionCtx.waitUntil(
-					c.env.KV.put(kvPath, body, {
+					c.env.KV.put(kvPath, arrayBuffer, {
 						expirationTtl: 2592000, // 30 days
 						metadata: {
 							headers: {
@@ -105,6 +106,7 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 				c.get('logger').info('Not caching in KV because size is too big')
 			}
 
+			let body: BodyInit = arrayBuffer || r2Res.body
 			response = c.body(body, 200, {
 				'Content-Type': contentType,
 				'Cache-Control': 'public, max-age=3600, s-max-age=3600', // 1 hour
