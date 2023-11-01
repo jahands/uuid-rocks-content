@@ -29,6 +29,7 @@ export function useAxiomLogger<T extends App>(environment: Environment) {
 					server: 'workers',
 					source: 'uuid-rocks-content',
 					handler: 'fetch',
+					version: c.env.VERSION,
 					invocationId: c.get('invocationId'),
 					env: environment ?? 'development',
 					cf: {

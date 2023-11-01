@@ -2,6 +2,10 @@ import { AxiomLogger } from './axiom'
 import { CFTrace } from './cftrace'
 
 export type Bindings = {
+	// Vars
+	VERSION: string
+
+	// Bindings
 	R2: R2Bucket
 	KV: KVNamespace
 
