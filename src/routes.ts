@@ -13,10 +13,12 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 	c.set('kvHit', false)
 	c.set('r2Hit', false)
 	c.set('cacheHit', false)
+	c.set('servedBy', 'unknown')
 
 	const cachedResponse = await cache.match(c.req.raw)
 	if (cachedResponse) {
 		c.set('cacheHit', true)
+		c.set('servedBy', 'cache')
 		return cachedResponse
 	}
 
@@ -43,6 +45,7 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 
 	if (kvRes.value) {
 		c.set('kvHit', true)
+		c.set('servedBy', 'kv')
 		useCacheAPI = true // If we can store it in KV, it's small enough for cache
 
 		const meta = kvRes.metadata as any
@@ -77,6 +80,7 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 
 		if (r2Res) {
 			c.set('r2Hit', true)
+			c.set('servedBy', 'r2')
 
 			const contentType = r2Res.httpMetadata?.contentType || mime.getType(fileExtension) || 'application/octet-stream'
 			if (r2Res.size > 0) {

@@ -24,6 +24,7 @@ export type Variables = {
 	r2Hit: boolean
 	kvHit: boolean
 	cacheHit: boolean
+	servedBy: 'r2' | 'kv' | 'cache' | 'unknown'
 }
 
 /** Top-level Hono app */
