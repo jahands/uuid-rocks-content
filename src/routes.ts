@@ -13,7 +13,6 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 	c.set('kvHit', false)
 	c.set('r2Hit', false)
 	c.set('cacheHit', false)
-	c.set('servedBy', 'unknown')
 
 	const cachedResponse = await cache.match(c.req.raw)
 	if (cachedResponse) {
