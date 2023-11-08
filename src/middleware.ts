@@ -35,6 +35,7 @@ export function useAxiomLogger<T extends App>(environment: Environment) {
 					cf: {
 						colo: trace?.colo,
 						loc: trace?.loc,
+						raw: trace?.raw,
 					},
 				},
 			})
