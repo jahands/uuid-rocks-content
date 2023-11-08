@@ -197,6 +197,8 @@ esac
 #update version variable post install
 version=$(rclone --version 2>>errors | head -n 1)
 
+rm -rf "$tmp_dir"
+
 printf "\n${version} has successfully installed."
 printf '\nNow run "rclone config" for setup. Check https://rclone.org/docs/ for more details.\n\n'
 exit 0
