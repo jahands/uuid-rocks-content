@@ -15,7 +15,7 @@ export type Bindings = {
 }
 
 /** Global Hono variables */
-export const Hosts = ['i.uuid.rocks', 'dl.uuid.rocks'] as const
+export const Hosts = ['i.uuid.rocks', 'dl.uuid.rocks', 'sh.uuid.rocks'] as const
 export type Host = typeof Hosts[number]
 
 export type Variables = {

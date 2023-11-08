@@ -129,3 +129,63 @@ export async function getFromStorage(c: Context<App>, storagePrefix: string): Pr
 
 	return response
 }
+
+/** Like getFromStorage but doesn't use KV cache and has very short edge TTL */
+export async function getFromStorageNoCache(c: Context<App>, storagePrefix: string): Promise<Response> {
+	const r2Path = `${storagePrefix}${c.req.path}`
+	const fileExtension = c.req.path.split('.').pop() || ''
+	let response: Response | undefined
+	const cache = caches.default
+
+	c.set('r2Hit', false)
+	c.set('cacheHit', false)
+
+	const cachedResponse = await cache.match(c.req.raw)
+	if (cachedResponse) {
+		c.set('cacheHit', true)
+		c.set('servedBy', 'cache')
+		return cachedResponse
+	}
+
+	const r2Res = await pRetry(
+		async () => {
+			const res = await c.env.R2.get(r2Path)
+			return res
+		},
+		{
+			retries: 3,
+			randomize: true,
+			onFailedAttempt: (err) => {
+				c.get('logger').error(`R2 read failed: ${err.message}`, {
+					attemptNumber: err.attemptNumber,
+					retriesLeft: err.retriesLeft,
+					error: err,
+				})
+			},
+		}
+	)
+
+	if (r2Res) {
+		c.set('r2Hit', true)
+		c.set('servedBy', 'r2')
+
+		const contentType = r2Res.httpMetadata?.contentType || mime.getType(fileExtension) || 'application/octet-stream'
+		if (r2Res.size > 0) {
+			c.header('Content-Length', r2Res.size.toString())
+		}
+
+		response = c.body(r2Res.body, 200, {
+			'Content-Type': contentType,
+			'Cache-Control': 'public, max-age=60, s-max-age=60', // 1 minute
+		})
+	}
+
+	if (!response) {
+		// Always cache 404s
+		c.header('Cache-Control', 'public, max-age=60, s-max-age=60')
+		response = await c.notFound()
+		c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()))
+	}
+	c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()))
+	return response
+}

@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { App } from './types'
 import { useAxiomLogger, useCFTraceMiddleware, useHostnameMiddleware } from './middleware'
-import { getFromStorage } from './routes'
+import { getFromStorage, getFromStorageNoCache } from './routes'
 
 declare const ENVIRONMENT: 'production' | undefined
 
@@ -16,6 +16,8 @@ const app = new Hono<App>()
 				return getFromStorage(c, 'IMAGES')
 			case 'dl.uuid.rocks':
 				return getFromStorage(c, 'DOWNLOADS')
+				case 'sh.uuid.rocks':
+					return getFromStorageNoCache(c, 'SCRIPTS')
 			default:
 				throw new HTTPException(400, { message: 'bad request' })
 		}
