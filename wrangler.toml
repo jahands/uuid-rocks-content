@@ -1,9 +1,9 @@
 name = "uuid-rocks-content"
 main = "src/index.ts"
 compatibility_date = "2023-10-02"
-usage_model = "unbound"
 workers_dev = false
 routes = ["i.uuid.rocks/*", "dl.uuid.rocks/*", "sh.uuid.rocks/*"]
+logpush = true
 
 [vars]
 AXIOM_DATASET = "workers"
