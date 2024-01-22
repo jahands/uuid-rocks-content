@@ -8,6 +8,7 @@
     "dev": "wrangler dev",
     "start": "wrangler dev"
   },
+  "packageManager": "pnpm@8.14.2",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230419.0",
     "@types/mime": "^3.0.2",
