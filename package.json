@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy --var VERSION:$(cat package.json|jq -r '.version')-$(git log -1 --pretty=format:%h)",
-    "sync-scripts": "rclone sync ./sh-uuid-rocks r2:uuid-rocks-content/SCRIPTS -P --transfers 20 --checkers 20",
+    "sync-scripts": "rclone sync ./sh-uuid-rocks :s3:uuid-rocks-content/SCRIPTS -P --transfers 20 --checkers 20 --s3-provider='Cloudflare' --s3-env-auth='true' --s3-endpoint='https://f9b1e1e2cf50cca79a58e395b6084239.r2.cloudflarestorage.com' --s3-acl=private",
     "dev": "wrangler dev",
     "start": "wrangler dev"
   },
